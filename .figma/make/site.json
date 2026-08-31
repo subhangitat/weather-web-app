@@ -1,0 +1,10 @@
+{
+  "description": "Access real-time weather updates, manage favorite cities, and receive alerts with a sleek, user-friendly interface designed for seamless navigation.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
