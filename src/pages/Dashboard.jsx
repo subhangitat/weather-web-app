@@ -1,11 +1,11 @@
 import { useState } from "react"
-import { conditionTheme, MOCK_CITIES, MOCK_ALERTS } from "../data/mockWeather"
 import WeatherIllustration from "../components/WeatherIllustration"
 import Sidebar from "../components/Sidebar"
 import WeatherHero from "../components/WeatherHero"
 import HourlyForecast from "../components/HourlyForecast"
 import WeeklyForecast from "../components/WeeklyForecast"
 import WeatherAlerts from "../components/WeatherAlerts"
+import { conditionTheme } from "../data/mockWeather"
 
 export default function Dashboard({ onLogout }) {
   const [searchQuery, setSearchQuery] = useState("")
@@ -14,29 +14,48 @@ export default function Dashboard({ onLogout }) {
   const [alerts, setAlerts] = useState([])
   const [favorites, setFavorites] = useState([])
   const [isFav, setIsFav] = useState(false)
+async function doSearch(query) {
+  const q = query.trim()
 
-  function doSearch(query) {
-    const q = query.toLowerCase().trim()
-    if (!q) return
-    setAppState("loading")
-    setWeather(null)
-    setAlerts([])
-    setTimeout(() => {
-      if (q === "error") {
-        setAppState("error")
-        return
-      }
-      const data = MOCK_CITIES[q]
-      if (data) {
-        setWeather(data)
-        setAlerts(MOCK_ALERTS[q] || [])
-        setIsFav(favorites.includes(data.city))
-        setAppState("ready")
-      } else {
-        setAppState("invalid-city")
-      }
-    }, 1100)
+  if (!q) return
+
+  setAppState("loading")
+  setWeather(null)
+  setAlerts([])
+
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/weather?city=${encodeURIComponent(q)}`
+    )
+
+    if (!response.ok) {
+      setAppState("invalid-city")
+      return
+    }
+
+    const data = await response.json()
+
+    const weatherData = {
+      city: data.name,
+      country: data.sys.country,
+      temp: Math.round(data.main.temp),
+      feelsLike: Math.round(data.main.feels_like),
+      condition: data.weather[0].description,
+      icon: "sunny",
+      humidity: data.main.humidity,
+      windSpeed: Math.round(data.wind.speed * 3.6),
+      hourly: [],
+      weekly: [],
+    }
+
+    setWeather(weatherData)
+    setIsFav(favorites.includes(weatherData.city))
+    setAppState("ready")
+  } catch (error) {
+    console.error(error)
+    setAppState("error")
   }
+}
 
   function handleSearch() {
     doSearch(searchQuery)
