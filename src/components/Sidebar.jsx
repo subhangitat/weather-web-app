@@ -101,24 +101,24 @@ export default function Sidebar({
           </div>
         ) : (
           <ul className="space-y-1">
-            {favorites.map((city) => (
+            {favorites.map((favorite)  => (
               <li
-                key={city}
+                key={favorite._id}
                 className="group flex items-center justify-between rounded-2xl px-3 py-2.5 hover:bg-white/[0.04] transition-colors cursor-pointer"
-                onClick={() => onSelectFavorite(city)}
+                onClick={() => onSelectFavorite(favorite.city)}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-7 h-7 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-400">
-                    {city[0]}
+                 {favorite.city[0]}
                   </div>
                   <span className="text-slate-300 text-sm group-hover:text-white transition-colors">
-                    {city}
+                 {favorite.city}
                   </span>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    onRemoveFavorite(city)
+                   onRemoveFavorite(favorite)
                   }}
                   className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-all p-1 rounded-lg hover:bg-red-500/10"
                 >

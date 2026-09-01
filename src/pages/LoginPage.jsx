@@ -6,14 +6,43 @@ export default function LoginPage({ onLogin, onGoRegister }) {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (!email || !password) {
-      setError("Please enter your email and password.")
-      return
-    }
-    onLogin()
+  async function handleSubmit(e) {
+  e.preventDefault()
+
+  if (!email || !password) {
+    setError("Please enter your email and password.")
+    return
   }
+
+  try {
+    const response = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+  setError(data.message)
+  return
+}
+
+localStorage.setItem("token", data.token)
+
+onLogin()
+
+   
+
+  } catch (error) {
+    setError("Unable to connect to server.")
+  }
+}
 
   return (
     <AuthShell>

@@ -7,18 +7,39 @@ export default function RegisterPage({ onRegister, onGoLogin }) {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (!name || !email || !password) {
-      setError("Please fill in all fields.")
-      return
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.")
-      return
-    }
-    onRegister()
+async function handleSubmit(e) {
+  e.preventDefault()
+
+  if (!name || !email || !password) {
+    setError("Please fill in all fields.")
+    return
   }
+
+  try {
+    const response = await fetch("http://localhost:5000/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+      }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      setError(data.message)
+      return
+    }
+
+    onRegister()
+  } catch (error) {
+    setError("Unable to connect to server.")
+  }
+}
 
   return (
     <AuthShell>

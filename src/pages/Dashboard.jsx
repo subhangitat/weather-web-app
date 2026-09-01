@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import WeatherIllustration from "../components/WeatherIllustration"
 import Sidebar from "../components/Sidebar"
 import WeatherHero from "../components/WeatherHero"
@@ -13,7 +13,66 @@ export default function Dashboard({ onLogout }) {
   const [weather, setWeather] = useState(null)
   const [alerts, setAlerts] = useState([])
   const [favorites, setFavorites] = useState([])
+  const token = localStorage.getItem("token")
   const [isFav, setIsFav] = useState(false)
+
+  async function toggleFavorite() {
+  if (!weather) return
+
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/favorites",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+         city: weather.city,
+        }),
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.log(data.message)
+      return
+    }
+
+    setIsFav(true)
+    setFavorites((prev) => [...prev, data.favorite])
+  } catch (error) {
+    console.error("Error adding favorite:", error)
+  }
+}
+    useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/favorites",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        const data = await response.json()
+
+        if (response.ok) {
+          setFavorites(data.favorites)
+        }
+      } catch (error) {
+        console.error("Error fetching favorites:", error)
+      }
+    }
+
+    if (token) {
+      fetchFavorites()
+    }
+  }, [token])
 async function doSearch(query) {
   const q = query.trim()
 
@@ -122,22 +181,38 @@ forecastData.list.forEach((item) => {
     doSearch(searchQuery)
   }
 
-  function toggleFavorite() {
-    if (!weather) return
-    if (isFav) {
-      setFavorites((p) => p.filter((f) => f !== weather.city))
-      setIsFav(false)
-    } else {
-      setFavorites((p) => [...p, weather.city])
-      setIsFav(true)
+
+
+async function removeFavorite(favorite) {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/favorites/${favorite._id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.log(data.message)
+      return
     }
-  }
 
-  function removeFavorite(city) {
-    setFavorites((p) => p.filter((f) => f !== city))
-    if (weather?.city === city) setIsFav(false)
-  }
+    setFavorites((p) =>
+      p.filter((f) => f._id !== favorite._id)
+    )
 
+    if (weather?.city === favorite.city) {
+      setIsFav(false)
+    }
+  } catch (error) {
+    console.error("Error removing favorite:", error)
+  }
+}
   function selectFavorite(city) {
     setSearchQuery(city)
     doSearch(city)
