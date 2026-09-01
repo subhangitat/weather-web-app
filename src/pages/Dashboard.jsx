@@ -34,6 +34,50 @@ async function doSearch(query) {
     }
 
     const data = await response.json()
+    const forecastResponse = await fetch(
+  `http://localhost:5000/api/weather/forecast?city=${encodeURIComponent(q)}`
+)
+
+if (!forecastResponse.ok) {
+  setAppState("error")
+  return
+}
+
+const forecastData = await forecastResponse.json()
+console.log("FORECAST DATA:", forecastData)
+const weeklyData = []
+forecastData.list.forEach((item) => {
+  const date = new Date(item.dt * 1000)
+  const day = date.toLocaleDateString([], { weekday: "short" })
+
+  const existingDay = weeklyData.find((d) => d.day === day)
+
+  const temp = Math.round(item.main.temp)
+
+  if (!existingDay) {
+    weeklyData.push({
+      day,
+      icon:
+        item.weather[0].main.toLowerCase() === "clear"
+          ? "sunny"
+          : item.weather[0].main.toLowerCase() === "clouds"
+          ? "cloudy"
+          : item.weather[0].main.toLowerCase() === "rain"
+          ? "rainy"
+          : item.weather[0].main.toLowerCase() === "thunderstorm"
+          ? "stormy"
+          : item.weather[0].main.toLowerCase() === "snow"
+          ? "snowy"
+          : "cloudy",
+      condition: item.weather[0].description,
+      low: temp,
+      high: temp,
+    })
+  } else {
+    existingDay.low = Math.min(existingDay.low, temp)
+    existingDay.high = Math.max(existingDay.high, temp)
+  }
+})
 
     const weatherData = {
       city: data.name,
@@ -44,8 +88,25 @@ async function doSearch(query) {
       icon: "sunny",
       humidity: data.main.humidity,
       windSpeed: Math.round(data.wind.speed * 3.6),
-      hourly: [],
-      weekly: [],
+    hourly: forecastData.list.slice(0, 8).map((item) => ({
+  time: new Date(item.dt * 1000).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  }),
+  temp: Math.round(item.main.temp),
+  icon:  item.weather[0].main.toLowerCase() === "clear"
+    ? "sunny"
+    : item.weather[0].main.toLowerCase() === "clouds"
+    ? "cloudy"
+    : item.weather[0].main.toLowerCase() === "rain"
+    ? "rainy"
+    : item.weather[0].main.toLowerCase() === "thunderstorm"
+    ? "stormy"
+    : item.weather[0].main.toLowerCase() === "snow"
+    ? "snowy"
+    : "cloudy",
+})),
+     weekly: weeklyData,
     }
 
     setWeather(weatherData)

@@ -1,6 +1,6 @@
 import SmallIcon from "./SmallIcon"
 
-export default function HourlyForecast({ hourly }) {
+export default function HourlyForecast({ hourly = [] })  {
   return (
     <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl p-5">
       <p
